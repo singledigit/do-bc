@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  KeyPairName:
+    Description: The name of an existing Amazon EC2 key pair in the region where the project is created, which you can use to SSH into the new Amazon EC2 Linux instances.
+    Type: AWS::EC2::KeyPair::KeyName
+  VpcId:
+    Description: The ID of the Amazon Virtual Private Cloud (VPC) to use for Amazon EC2 instances.
+    Type: AWS::EC2::VPC::Id
+    
+Mappings: 
+  RegionMap:
+    us-east-1:
+      ami: ami-0922553b7b0369273
+    us-west-2: 
+      ami: ami-0d1000aff9a9bad89
+    eu-west-1:
+      ami: ami-0c21ae4a3bd190229
+
+Resources:
+  WebApp01:
+    Description: Simple instance for node web app.
+    Properties:
+      ImageId: !FindInMap
+        - RegionMap
+        - !Ref 'AWS::Region'
+        - ami
+      InstanceType: t2.micro
+      KeyName: !Ref 'KeyPairName'
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: true
+        DeviceIndex: 0
+        GroupSet:
+        - !Ref 'WebAppSG'
+      UserData:
+        Fn::Base64:
+          Fn::Sub: |
+            #!/bin/bash -ex
+            sudo su
+            mkdir /home/ec2-user/node-website
+            curl -sL https://rpm.nodesource.com/setup_8.x | bash -
+            yum install -y nodejs
+            npm install forever -g
+            wget https://gist.githubusercontent.com/singledigit/64048c9770e06f1662d2a72605f0c67f/raw/62207307803ba3212b9583228aa2cf701d72c4a4/node8hello.js -O app.js
+            export PORT=80
+            forever start app.js
+    Type: AWS::EC2::Instance
+  WebAppSG:
+    Description: The default Amazon EC2 security group that will be created for the Amazon EC2 Linux instances.
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP access via port 80 and SSH access via port 22.
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '80'
+        ToPort: '80'
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp: 0.0.0.0/0
+      VpcId: !Ref 'VpcId'
+
+Outputs:
+  Url:
+    Value: !Sub
+      - http://${weburl}
+      - {weburl: !GetAtt WebApp01.PublicDnsName}
+    Description: Url of demo website
