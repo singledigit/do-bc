@@ -1,9 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  # ProjectId:
-  #   Type: String
-  #   Description: AWS CodeStar project ID used to name project resources and create roles.
+  ProjectId:
+    Type: String
+    Description: AWS CodeStar project ID used to name project resources and create roles.
   KeyPairName:
     Description: The name of an existing Amazon EC2 key pair in the region where the project is created, which you can use to SSH into the new Amazon EC2 Linux instances.
     Type: AWS::EC2::KeyPair::KeyName
@@ -35,11 +35,11 @@ Resources:
         DeviceIndex: 0
         GroupSet:
         - !Ref 'WebAppSG'
-      # Tags:
-      # - Key: Environment
-      #   Value: !Sub '${ProjectId}-WebApp'
-      # - Key: Name
-      #   Value: !Sub '${ProjectId}-WebApp'
+      Tags:
+      - Key: Environment
+        Value: !Sub '${ProjectId}-WebApp'
+      - Key: Name
+        Value: !Sub '${ProjectId}-WebApp'
       UserData:
         Fn::Base64:
           Fn::Sub: |
