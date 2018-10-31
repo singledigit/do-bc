@@ -1,4 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
+Description: Node App Infrastructure
 
 Parameters:
   # ProjectId:
@@ -45,10 +46,11 @@ Resources:
           Fn::Sub: |
             #!/bin/bash -ex
             sudo su
-            mkdir /home/ec2-user/node-website
             curl -sL https://rpm.nodesource.com/setup_8.x | bash -
             yum install -y nodejs
             npm install forever -g
+            mkdir /home/ec2-user/node-website
+            cd /home/ec2-user/node-website
             wget https://gist.githubusercontent.com/singledigit/64048c9770e06f1662d2a72605f0c67f/raw/62207307803ba3212b9583228aa2cf701d72c4a4/node8hello.js -O app.js
             export PORT=80
             forever start app.js
