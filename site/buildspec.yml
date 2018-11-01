@@ -22,5 +22,9 @@ phases:
 artifacts:
   type: zip
   files:
-    - app.js
+    - package.json
     - index.html
+    - app.js
+    - appspec.yml
+    - scripts/*
+    - node_modules/**/*

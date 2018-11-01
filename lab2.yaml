@@ -270,6 +270,12 @@ Resources:
           - Action:
             - ec2:DescribeInstances
             - ec2:DescribeInstanceStatus
+            - autoscaling:CompleteLifecycleAction
+            - autoscaling:DeleteLifecycleHook
+            - autoscaling:DescribeAutoScalingGroups
+            - autoscaling:DescribeLifecycleHooks
+            - autoscaling:PutLifecycleHook
+            - autoscaling:RecordLifecycleActionHeartbeat
             Effect: Allow
             Resource:
             - '*'
@@ -362,7 +368,7 @@ Resources:
     Description: Creating AWS CodeDeploy deployment groups for project application
     Properties:
       ApplicationName: !Ref 'CodeDeployApplication'
-      DeploymentConfigName: CodeDeployDefault.OneAtATime
+      DeploymentConfigName: CodeDeployDefault.AllAtOnce
       DeploymentGroupName: !Join
       - ''
       - - !Ref 'ProjectId'
@@ -707,3 +713,10 @@ Resources:
       Roles:
       - !Ref 'WebAppRole'
     Type: AWS::IAM::Policy
+    
+Outputs:
+  WebProfile:
+    Description: Web profile Arn for instances
+    Value: !Ref WebAppInstanceProfile
+    Export:
+      Name: WebProfile

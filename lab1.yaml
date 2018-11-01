@@ -46,6 +46,12 @@ Resources:
           Fn::Sub: |
             #!/bin/bash -ex
             sudo su
+            # Install the AWS CodeDeploy Agent.
+            yum -y install ruby
+            cd /home/ec2-user/
+            wget https://aws-codedeploy-${AWS::Region}.s3.amazonaws.com/latest/codedeploy-agent.noarch.rpm
+            yum -y install codedeploy-agent.noarch.rpm
+            # Setup App
             curl -sL https://rpm.nodesource.com/setup_8.x | bash -
             yum install -y nodejs
             npm install forever -g
