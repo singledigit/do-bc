@@ -4,6 +4,7 @@ Description: Node App Infrastructure
 Parameters:
   ProjectId:
     Type: String
+    Default: bootcampapp
     Description: AWS CodeStar project ID used to name project resources and create roles.
   KeyPairName:
     Description: The name of an existing Amazon EC2 key pair in the region where the project is created, which you can use to SSH into the new Amazon EC2 Linux instances.
