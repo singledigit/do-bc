@@ -2,9 +2,9 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Node App Infrastructure
 
 Parameters:
-  # ProjectId:
-  #   Type: String
-  #   Description: AWS CodeStar project ID used to name project resources and create roles.
+  ProjectId:
+    Type: String
+    Description: AWS CodeStar project ID used to name project resources and create roles.
   KeyPairName:
     Description: The name of an existing Amazon EC2 key pair in the region where the project is created, which you can use to SSH into the new Amazon EC2 Linux instances.
     Type: AWS::EC2::KeyPair::KeyName
@@ -25,6 +25,7 @@ Resources:
   WebApp01:
     Description: Simple instance for node web app.
     Properties:
+      IamInstanceProfile: !Ref WebAppInstanceProfile
       ImageId: !FindInMap
         - RegionMap
         - !Ref 'AWS::Region'
@@ -76,6 +77,63 @@ Resources:
         ToPort: '22'
         CidrIp: 0.0.0.0/0
       VpcId: !Ref 'VpcId'
+  WebAppInstanceProfile:
+    Description: Creating Amazon EC2 instance profile for instances
+    Properties:
+      Path: /
+      Roles:
+      - !Ref 'WebAppRole'
+    Type: AWS::IAM::InstanceProfile
+  WebAppRole:
+    Description: Creating service role in IAM for Amazon EC2 instances
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: ec2.amazonaws.com
+          Sid: ''
+      Path: /
+      RoleName: !Sub 'CodeStarWorker-${ProjectId}-WebApp'
+    Type: AWS::IAM::Role
+  WebAppRolePolicies:
+    Description: Setting IAM policy for service role for Amazon EC2 instances
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+          - ec2:Describe*
+          Effect: Allow
+          Resource:
+          - '*'
+        - Action:
+          - s3:Get*
+          - s3:List*
+          Effect: Allow
+          Resource: '*'
+        - Action:
+          - s3:GetObject
+          Effect: Allow
+          Resource:
+          - !Sub 'arn:aws:s3:::aws-codestar-${AWS::Region}-${AWS::AccountId}/${ProjectId}/ssh/*'
+          - arn:aws:s3:::awscodestar-remote-access-signatures-eu-west-1/*
+          - arn:aws:s3:::awscodestar-remote-access-eu-west-1/*
+        - Action:
+          - cloudformation:DescribeStackResources
+          Effect: Allow
+          Resource:
+          - !Ref 'AWS::StackId'
+        - Action:
+          - codedeploy:BatchGet*
+          - codedeploy:Get*
+          - codedeploy:List*
+          Effect: Allow
+          Resource: '*'
+      PolicyName: CodeStarWorkerBackendPolicy
+      Roles:
+      - !Ref 'WebAppRole'
+    Type: AWS::IAM::Policy
 
 Outputs:
   Url:
@@ -83,3 +141,7 @@ Outputs:
       - http://${weburl}
       - {weburl: !GetAtt WebApp01.PublicDnsName}
     Description: Url of demo website
+  WebAppRole:
+    Value: !GetAtt WebAppRole.Arn
+    Export:
+      Name: WebAppRoleArn
